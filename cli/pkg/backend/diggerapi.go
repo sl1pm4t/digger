@@ -158,6 +158,7 @@ func (d DiggerApi) ReportProjectJobStatus(repo string, projectName string, jobId
 	if err != nil {
 		return nil, fmt.Errorf("Could not read response body: %v", err)
 	}
+	fmt.Printf("\n------\nRESPONSE: %s\n", string(body))
 
 	var response scheduler.SerializedBatch
 	json.Unmarshal(body, &response)
