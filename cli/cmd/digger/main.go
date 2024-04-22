@@ -8,6 +8,7 @@ import (
 	core_drift "github.com/diggerhq/digger/cli/pkg/core/drift"
 	core_reporting "github.com/diggerhq/digger/cli/pkg/core/reporting"
 	"github.com/diggerhq/digger/cli/pkg/drift"
+	"github.com/kr/pretty"
 	"log"
 	"net/http"
 	"os"
@@ -62,6 +63,7 @@ func gitHubCI(lock core_locking.Lock, policyChecker core_policy.Checker, backend
 	if ghContext == "" {
 		reportErrorAndExit(githubActor, "GITHUB_CONTEXT is not defined", 2)
 	}
+	fmt.Printf("\n-----\nGITHUB_CONTEXT: %s\n-------\n", ghContext)
 
 	diggerOutPath := os.Getenv("DIGGER_OUT")
 	if diggerOutPath == "" {
@@ -110,9 +112,9 @@ func gitHubCI(lock core_locking.Lock, policyChecker core_policy.Checker, backend
 
 		jobJson := wdEvent.Inputs
 
-		if err != nil {
-			reportErrorAndExit(githubActor, fmt.Sprintf("Failed to marshal job json. %s", err), 4)
-		}
+		//if err != nil {
+		//	reportErrorAndExit(githubActor, fmt.Sprintf("Failed to marshal job json. %s", err), 4)
+		//}
 
 		err = json.Unmarshal(jobJson, &inputs)
 
@@ -120,11 +122,18 @@ func gitHubCI(lock core_locking.Lock, policyChecker core_policy.Checker, backend
 			reportErrorAndExit(githubActor, fmt.Sprintf("Failed to parse jobs json. %s", err), 4)
 		}
 
+		fmt.Printf("\n-----\nINPUTS: %+v\n-------\n", inputs)
+
 		repoName := strings.ReplaceAll(ghRepository, "/", "-")
 
 		var job orchestrator.JobJson
 
 		err = json.Unmarshal([]byte(inputs.JobString), &job)
+		if err != nil {
+			reportErrorAndExit(githubActor, fmt.Sprintf("Failed unmarshall job string: %v", err), 4)
+		}
+		fmt.Printf("\n-----\nJOB: %+v\n-------\n", job)
+		pretty.Print(job)
 		commentId64, err := strconv.ParseInt(inputs.CommentId, 10, 64)
 
 		err = githubPrService.SetOutput(*job.PullRequestNumber, "DIGGER_PR_NUMBER", fmt.Sprintf("%v", *job.PullRequestNumber))
