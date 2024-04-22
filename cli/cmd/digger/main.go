@@ -62,6 +62,7 @@ func gitHubCI(lock core_locking.Lock, policyChecker core_policy.Checker, backend
 	if ghContext == "" {
 		reportErrorAndExit(githubActor, "GITHUB_CONTEXT is not defined", 2)
 	}
+	fmt.Printf("\n-----\nGITHUB_CONTEXT: %s\n-------\n", ghContext)
 
 	diggerOutPath := os.Getenv("DIGGER_OUT")
 	if diggerOutPath == "" {
@@ -107,15 +108,17 @@ func gitHubCI(lock core_locking.Lock, policyChecker core_policy.Checker, backend
 
 		jobJson := wdEvent.Inputs
 
-		if err != nil {
-			reportErrorAndExit(githubActor, fmt.Sprintf("Failed to marshal job json. %s", err), 4)
-		}
+		//if err != nil {
+		//	reportErrorAndExit(githubActor, fmt.Sprintf("Failed to marshal job json. %s", err), 4)
+		//}
 
 		err = json.Unmarshal(jobJson, &inputs)
 
 		if err != nil {
 			reportErrorAndExit(githubActor, fmt.Sprintf("Failed to parse jobs json. %s", err), 4)
 		}
+
+		fmt.Printf("\n-----\nINPUTS: %+v\n-------\n", inputs)
 
 		repoName := strings.ReplaceAll(ghRepository, "/", "-")
 
@@ -125,6 +128,7 @@ func gitHubCI(lock core_locking.Lock, policyChecker core_policy.Checker, backend
 		if err != nil {
 			reportErrorAndExit(githubActor, fmt.Sprintf("Failed unmarshall job string: %v", err), 4)
 		}
+		fmt.Printf("\n-----\nJOB: %+v\n-------\n", job)
 		commentId64, err := strconv.ParseInt(inputs.CommentId, 10, 64)
 
 		if job.BackendHostname != "" && job.BackendOrganisationName != "" && job.BackendJobToken != "" {
@@ -263,23 +267,23 @@ func gitHubCI(lock core_locking.Lock, policyChecker core_policy.Checker, backend
 			workflow := diggerConfig.Workflows[projectConfig.Workflow]
 
 			stateEnvVars, commandEnvVars := digger_config.CollectTerraformEnvConfig(workflow.EnvVars)
-			
+
 			StateEnvProvider, CommandEnvProvider := orchestrator.GetStateAndCommandProviders(projectConfig)
-			
+
 			job := orchestrator.Job{
-				ProjectName:      projectConfig.Name,
-				ProjectDir:       projectConfig.Dir,
-				ProjectWorkspace: projectConfig.Workspace,
-				Terragrunt:       projectConfig.Terragrunt,
-				OpenTofu:         projectConfig.OpenTofu,
-				Commands:         []string{"digger drift-detect"},
-				ApplyStage:       orchestrator.ToConfigStage(workflow.Apply),
-				PlanStage:        orchestrator.ToConfigStage(workflow.Plan),
-				CommandEnvVars:   commandEnvVars,
-				StateEnvVars:     stateEnvVars,
-				RequestedBy:      githubActor,
-				Namespace:        ghRepository,
-				EventName:        "drift-detect",
+				ProjectName:        projectConfig.Name,
+				ProjectDir:         projectConfig.Dir,
+				ProjectWorkspace:   projectConfig.Workspace,
+				Terragrunt:         projectConfig.Terragrunt,
+				OpenTofu:           projectConfig.OpenTofu,
+				Commands:           []string{"digger drift-detect"},
+				ApplyStage:         orchestrator.ToConfigStage(workflow.Apply),
+				PlanStage:          orchestrator.ToConfigStage(workflow.Plan),
+				CommandEnvVars:     commandEnvVars,
+				StateEnvVars:       stateEnvVars,
+				RequestedBy:        githubActor,
+				Namespace:          ghRepository,
+				EventName:          "drift-detect",
 				StateEnvProvider:   StateEnvProvider,
 				CommandEnvProvider: CommandEnvProvider,
 			}
@@ -683,19 +687,19 @@ func bitbucketCI(lock core_locking.Lock, policyChecker core_policy.Checker, back
 			StateEnvProvider, CommandEnvProvider := orchestrator.GetStateAndCommandProviders(projectConfig)
 
 			job := orchestrator.Job{
-				ProjectName:      projectConfig.Name,
-				ProjectDir:       projectConfig.Dir,
-				ProjectWorkspace: projectConfig.Workspace,
-				Terragrunt:       projectConfig.Terragrunt,
-				OpenTofu:         projectConfig.OpenTofu,
-				Commands:         []string{"digger drift-detect"},
-				ApplyStage:       orchestrator.ToConfigStage(workflow.Apply),
-				PlanStage:        orchestrator.ToConfigStage(workflow.Plan),
-				CommandEnvVars:   commandEnvVars,
-				StateEnvVars:     stateEnvVars,
-				RequestedBy:      actor,
-				Namespace:        repository,
-				EventName:        "drift-detect",
+				ProjectName:        projectConfig.Name,
+				ProjectDir:         projectConfig.Dir,
+				ProjectWorkspace:   projectConfig.Workspace,
+				Terragrunt:         projectConfig.Terragrunt,
+				OpenTofu:           projectConfig.OpenTofu,
+				Commands:           []string{"digger drift-detect"},
+				ApplyStage:         orchestrator.ToConfigStage(workflow.Apply),
+				PlanStage:          orchestrator.ToConfigStage(workflow.Plan),
+				CommandEnvVars:     commandEnvVars,
+				StateEnvVars:       stateEnvVars,
+				RequestedBy:        actor,
+				Namespace:          repository,
+				EventName:          "drift-detect",
 				CommandEnvProvider: CommandEnvProvider,
 				StateEnvProvider:   StateEnvProvider,
 			}
